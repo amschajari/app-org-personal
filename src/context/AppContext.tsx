@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { Task, Category, FinancialCommitment, AppNotification, ActiveTab, Priority } from '../types';
-import { StorageService } from '../services/storage';
+import { Task, Category, FinancialCommitment, AppNotification, ActiveTab, Priority, SubTask } from '../types';
+import { dataService, newId } from '../services/supabaseService';
+import { useAuth } from './AuthContext';
 import { isTaskOverdue, isTaskToday } from '../utils/dateUtils';
 
 interface AppContextType {
@@ -13,6 +14,10 @@ interface AppContextType {
   setActiveTab: (tab: ActiveTab) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+
+  isLoading: boolean;
+  error: string | null;
+  reload: () => void;
 
   // Task Actions
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'postponementCount' | 'subtasks'> & { subtasks?: string[] }) => void;
@@ -62,9 +67,15 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<Task[]>(() => StorageService.getTasks());
-  const [categories, setCategories] = useState<Category[]>(() => StorageService.getCategories());
-  const [payments, setPayments] = useState<FinancialCommitment[]>(() => StorageService.getPayments());
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [payments, setPayments] = useState<FinancialCommitment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('mi-dia');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -79,25 +90,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [dismissedNotificationIds, setDismissedNotificationIds] = useState<string[]>([]);
   const [lastCompletedTask, setLastCompletedTask] = useState<Task | null>(null);
 
-  // Guardar en Storage al cambiar
-  useEffect(() => {
-    StorageService.saveTasks(tasks);
-  }, [tasks]);
+  const reportError = useCallback((context: string, e: unknown) => {
+    console.error(`[Productiva] ${context}:`, e);
+  }, []);
+
+  // Cargar (o recargar) todos los datos del usuario autenticado
+  const loadData = useCallback(async () => {
+    if (!userId) {
+      setTasks([]);
+      setCategories([]);
+      setPayments([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      await dataService.ensureSeedCategories(userId);
+      const data = await dataService.loadAll(userId);
+      setCategories(data.categories);
+      setTasks(data.tasks);
+      setPayments(data.payments);
+    } catch (e) {
+      reportError('cargar datos', e);
+      setError(e instanceof Error ? e.message : 'No se pudieron cargar los datos.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userId, reportError]);
 
   useEffect(() => {
-    StorageService.saveCategories(categories);
-  }, [categories]);
-
-  useEffect(() => {
-    StorageService.savePayments(payments);
-  }, [payments]);
+    loadData();
+  }, [loadData]);
 
   // Generador dinámico de notificaciones in-app
   const notifications = useMemo(() => {
     const list: AppNotification[] = [];
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // 1. Tareas vencidas
     tasks.filter(t => t.status !== 'completada' && isTaskOverdue(t.dueDate)).forEach(t => {
       list.push({
         id: `notif-overdue-${t.id}`,
@@ -111,7 +142,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     });
 
-    // 2. Tareas de hoy
     tasks.filter(t => t.status !== 'completada' && isTaskToday(t.dueDate)).forEach(t => {
       list.push({
         id: `notif-today-${t.id}`,
@@ -125,9 +155,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     });
 
-    // 3. Pagos próximos o vencidos
     payments.filter(p => p.status === 'pendiente').forEach(p => {
-      if (p.dueDate < todayStr) {
+      if (p.dueDate && p.dueDate < todayStr) {
         list.push({
           id: `notif-pay-overdue-${p.id}`,
           entityType: 'finance',
@@ -138,7 +167,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           date: p.dueDate,
           isRead: false,
         });
-      } else {
+      } else if (p.dueDate) {
         const due = new Date(p.dueDate).getTime();
         const diffDays = Math.ceil((due - Date.now()) / (1000 * 60 * 60 * 24));
         if (diffDays <= p.reminderDaysBefore) {
@@ -167,13 +196,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Acciones de Tareas
   const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'postponementCount' | 'subtasks'> & { subtasks?: string[] }) => {
+    if (!userId) return;
     const newTask: Task = {
       ...taskData,
-      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      id: newId(),
+      userId,
       createdAt: new Date().toISOString(),
       postponementCount: 0,
       subtasks: (taskData.subtasks || []).map((title, idx) => ({
-        id: `st-${Date.now()}-${idx}`,
+        id: newId(),
         title,
         isCompleted: false,
         order: idx,
@@ -181,48 +212,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setTasks(prev => [newTask, ...prev]);
+    dataService.insertTask(userId, newTask).catch(e => {
+      reportError('crear tarea', e);
+      setTasks(prev => prev.filter(t => t.id !== newTask.id));
+    });
   };
 
   const updateTask = (id: string, updates: Partial<Task>) => {
     setTasks(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+    dataService.updateTask(id, updates).catch(e => reportError('actualizar tarea', e));
   };
 
   const deleteTask = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
+    dataService.deleteTask(id).catch(e => reportError('eliminar tarea', e));
   };
 
   const toggleCompleteTask = (id: string) => {
-    setTasks(prev =>
-      prev.map(t => {
-        if (t.id !== id) return t;
-        const willBeCompleted = t.status !== 'completada';
+    const current = tasks.find(t => t.id === id);
+    if (!current) return;
 
-        if (willBeCompleted) {
-          const found = prev.find(item => item.id === id);
-          if (found) setLastCompletedTask(found);
+    const willBeCompleted = current.status !== 'completada';
+    const status = willBeCompleted ? 'completada' : 'pendiente';
+    const completedAt = willBeCompleted ? new Date().toISOString() : undefined;
 
-          // Lanzar confeti suave y satisfactorio
-          try {
-            confetti({
-              particleCount: 40,
-              spread: 60,
-              origin: { y: 0.8 },
-              colors: ['#3b82f6', '#10b981', '#6366f1'],
-            });
-          } catch {
-            // Ignorar si el navegador bloquea
-          }
-        } else {
-          setLastCompletedTask(null);
-        }
+    setTasks(prev => prev.map(t => (t.id === id ? { ...t, status, completedAt } : t)));
 
-        return {
-          ...t,
-          status: willBeCompleted ? 'completada' : 'pendiente',
-          completedAt: willBeCompleted ? new Date().toISOString() : undefined,
-        };
-      })
-    );
+    if (willBeCompleted) {
+      setLastCompletedTask(current);
+      try {
+        confetti({
+          particleCount: 40,
+          spread: 60,
+          origin: { y: 0.8 },
+          colors: ['#3b82f6', '#10b981', '#6366f1'],
+        });
+      } catch {
+        // Ignorar si el navegador bloquea
+      }
+    } else {
+      setLastCompletedTask(null);
+    }
+
+    dataService.updateTask(id, { status, completedAt }).catch(e => reportError('completar tarea', e));
   };
 
   const undoCompleteTask = () => {
@@ -232,110 +264,123 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map(t => (t.id === targetId ? { ...t, status: 'pendiente', completedAt: undefined } : t))
     );
     setLastCompletedTask(null);
+    dataService
+      .updateTask(targetId, { status: 'pendiente', completedAt: undefined })
+      .catch(e => reportError('deshacer completado', e));
   };
 
   const postponeTask = (id: string, daysOffset = 1) => {
+    const current = tasks.find(t => t.id === id);
     const d = new Date();
     d.setDate(d.getDate() + daysOffset);
     const newDueDate = d.toISOString().split('T')[0];
+    const lastPostponedAt = new Date().toISOString();
+    const postponementCount = (current?.postponementCount || 0) + 1;
 
     setTasks(prev =>
-      prev.map(t => {
-        if (t.id !== id) return t;
-        return {
-          ...t,
-          dueDate: newDueDate,
-          postponementCount: (t.postponementCount || 0) + 1,
-          lastPostponedAt: new Date().toISOString(),
-        };
-      })
+      prev.map(t =>
+        t.id === id ? { ...t, dueDate: newDueDate, postponementCount, lastPostponedAt } : t
+      )
     );
+    dataService
+      .updateTask(id, { dueDate: newDueDate, postponementCount, lastPostponedAt })
+      .catch(e => reportError('posponer tarea', e));
   };
 
   const toggleSubTask = (taskId: string, subTaskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    const sub = task?.subtasks.find(s => s.id === subTaskId);
+    if (!sub) return;
+
+    const isCompleted = !sub.isCompleted;
     setTasks(prev =>
-      prev.map(t => {
-        if (t.id !== taskId) return t;
-        const updatedSubtasks = t.subtasks.map(s =>
-          s.id === subTaskId ? { ...s, isCompleted: !s.isCompleted } : s
-        );
-        return { ...t, subtasks: updatedSubtasks };
-      })
+      prev.map(t =>
+        t.id === taskId
+          ? { ...t, subtasks: t.subtasks.map(s => (s.id === subTaskId ? { ...s, isCompleted } : s)) }
+          : t
+      )
     );
+    dataService.updateSubtask(subTaskId, { isCompleted }).catch(e => reportError('actualizar micro-paso', e));
   };
 
   const addSubTask = (taskId: string, title: string) => {
-    if (!title.trim()) return;
+    if (!title.trim() || !userId) return;
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const newSub: SubTask = {
+      id: newId(),
+      title: title.trim(),
+      isCompleted: false,
+      order: task.subtasks.length,
+    };
+
     setTasks(prev =>
-      prev.map(t => {
-        if (t.id !== taskId) return t;
-        const newSub: { id: string; title: string; isCompleted: boolean; order: number } = {
-          id: `st-${Date.now()}`,
-          title: title.trim(),
-          isCompleted: false,
-          order: t.subtasks.length,
-        };
-        return { ...t, subtasks: [...t.subtasks, newSub] };
-      })
+      prev.map(t => (t.id === taskId ? { ...t, subtasks: [...t.subtasks, newSub] } : t))
     );
+    dataService.insertSubtask(userId, taskId, newSub).catch(e => reportError('agregar micro-paso', e));
   };
 
   const deleteSubTask = (taskId: string, subTaskId: string) => {
     setTasks(prev =>
-      prev.map(t => {
-        if (t.id !== taskId) return t;
-        return { ...t, subtasks: t.subtasks.filter(s => s.id !== subTaskId) };
-      })
+      prev.map(t =>
+        t.id === taskId ? { ...t, subtasks: t.subtasks.filter(s => s.id !== subTaskId) } : t
+      )
     );
+    dataService.deleteSubtask(subTaskId).catch(e => reportError('eliminar micro-paso', e));
   };
 
   // Categorías
   const addCategory = (catData: Omit<Category, 'id'>) => {
-    const newCat: Category = {
-      ...catData,
-      id: `cat-${Date.now()}`,
-    };
+    if (!userId) return;
+    const newCat: Category = { ...catData, id: newId() };
+    const sortOrder = categories.length;
     setCategories(prev => [...prev, newCat]);
+    dataService.insertCategory(userId, newCat, sortOrder).catch(e => reportError('crear categoría', e));
   };
 
   const updateCategory = (id: string, updates: Partial<Category>) => {
     setCategories(prev => prev.map(c => (c.id === id ? { ...c, ...updates } : c)));
+    dataService.updateCategory(id, updates).catch(e => reportError('actualizar categoría', e));
   };
 
   const deleteCategory = (id: string) => {
     setCategories(prev => prev.filter(c => c.id !== id));
+    dataService.deleteCategory(id).catch(e => reportError('eliminar categoría', e));
   };
 
   // Finanzas
   const addPayment = (paymentData: Omit<FinancialCommitment, 'id' | 'createdAt'>) => {
+    if (!userId) return;
     const newPayment: FinancialCommitment = {
       ...paymentData,
-      id: `pay-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      id: newId(),
+      userId,
       createdAt: new Date().toISOString(),
     };
     setPayments(prev => [newPayment, ...prev]);
-  };
-
-  const togglePaymentStatus = (id: string) => {
-    setPayments(prev =>
-      prev.map(p => {
-        if (p.id !== id) return p;
-        const isNowPaid = p.status !== 'pagado';
-        return {
-          ...p,
-          status: isNowPaid ? 'pagado' : 'pendiente',
-          paidAt: isNowPaid ? new Date().toISOString() : undefined,
-        };
-      })
-    );
-  };
-
-  const deletePayment = (id: string) => {
-    setPayments(prev => prev.filter(p => p.id !== id));
+    dataService.insertPayment(userId, newPayment).catch(e => reportError('crear pago', e));
   };
 
   const updatePayment = (id: string, updates: Partial<FinancialCommitment>) => {
     setPayments(prev => prev.map(p => (p.id === id ? { ...p, ...updates } : p)));
+    dataService.updatePayment(id, updates).catch(e => reportError('actualizar pago', e));
+  };
+
+  const togglePaymentStatus = (id: string) => {
+    const current = payments.find(p => p.id === id);
+    if (!current) return;
+    const isNowPaid = current.status !== 'pagado';
+    const status = isNowPaid ? 'pagado' : 'pendiente';
+    const paidAt = isNowPaid ? new Date().toISOString() : undefined;
+
+    setPayments(prev => prev.map(p => (p.id === id ? { ...p, status, paidAt } : p)));
+    dataService.updatePayment(id, { status, paidAt }).catch(e => reportError('marcar pago', e));
+  };
+
+  const deletePayment = (id: string) => {
+    setPayments(prev => prev.filter(p => p.id !== id));
+    dataService.deletePayment(id).catch(e => reportError('eliminar pago', e));
   };
 
   // Modales
@@ -368,6 +413,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveTab,
         searchQuery,
         setSearchQuery,
+        isLoading,
+        error,
+        reload: loadData,
         addTask,
         updateTask,
         deleteTask,

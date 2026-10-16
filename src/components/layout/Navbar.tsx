@@ -10,9 +10,11 @@ import {
   Target,
   Sparkles,
   X,
-  ExternalLink
+  ExternalLink,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { ActiveTab } from '../../types';
 
 export const Navbar: React.FC = () => {
@@ -28,6 +30,8 @@ export const Navbar: React.FC = () => {
     tasks,
     payments
   } = useApp();
+
+  const { signOut, user } = useAuth();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -199,6 +203,16 @@ export const Navbar: React.FC = () => {
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Nueva tarea</span>
+            </button>
+
+            {/* Cerrar sesión */}
+            <button
+              onClick={() => signOut()}
+              className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              title={user?.email ? `Cerrar sesión (${user.email})` : 'Cerrar sesión'}
+              aria-label="Cerrar sesión"
+            >
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
 

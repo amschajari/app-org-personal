@@ -36,7 +36,7 @@ export const TaskModal: React.FC = () => {
       // Valores por defecto para nueva tarea
       setTitle('');
       setDescription('');
-      setCategoryId(categories[0]?.id || 'cat-trabajo');
+      setCategoryId(categories[0]?.id || '');
       setPriority('media');
       // Por defecto para hoy
       const today = new Date().toISOString().split('T')[0];
@@ -77,7 +77,7 @@ export const TaskModal: React.FC = () => {
       updateTask(taskToEdit.id, {
         title: title.trim(),
         description: description.trim() || undefined,
-        categoryId: categoryId || categories[0]?.id || 'cat-trabajo',
+        categoryId: categoryId || categories[0]?.id || '',
         priority,
         dueDate: dueDate || undefined,
         estimatedMinutes: Number(estimatedMinutes) || 25,
@@ -86,7 +86,7 @@ export const TaskModal: React.FC = () => {
       addTask({
         title: title.trim(),
         description: description.trim() || undefined,
-        categoryId: categoryId || categories[0]?.id || 'cat-trabajo',
+        categoryId: categoryId || categories[0]?.id || '',
         priority,
         status: 'pendiente',
         dueDate: dueDate || undefined,

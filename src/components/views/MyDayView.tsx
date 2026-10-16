@@ -59,7 +59,7 @@ export const MyDayView: React.FC = () => {
 
     addTask({
       title: quickInput.trim(),
-      categoryId: selectedCategory !== 'all' ? selectedCategory : (categories[0]?.id || 'cat-trabajo'),
+      categoryId: selectedCategory !== 'all' ? selectedCategory : (categories[0]?.id || ''),
       priority: 'media',
       status: 'pendiente',
       dueDate: todayStr,

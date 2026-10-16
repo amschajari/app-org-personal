@@ -89,7 +89,7 @@ export const PaymentsView: React.FC = () => {
         amount: parseFloat(amount) || 0,
         currency,
         entityName: entityName.trim() || undefined,
-        categoryId: 'cat-pagos',
+        categoryId: categories.find((c) => c.name === 'Pagos y deudas')?.id || categories[0]?.id || '',
         dueDate: dueDate || new Date().toISOString().split('T')[0],
         status: 'pendiente',
         recurrence,
