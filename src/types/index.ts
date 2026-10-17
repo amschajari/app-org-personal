@@ -15,6 +15,7 @@ export interface Category {
   color: string; // Tailwind color class or hex
   icon?: string;
   isDefault?: boolean;
+  order?: number;
 }
 
 export interface Project {

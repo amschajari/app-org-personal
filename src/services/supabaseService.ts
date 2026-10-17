@@ -85,6 +85,7 @@ const toCategory = (r: CategoryRow): Category => ({
   color: r.color,
   icon: r.icon ?? undefined,
   isDefault: r.is_default,
+  order: r.sort_order,
 });
 
 const toSubTask = (r: SubtaskRow): SubTask => ({
@@ -182,6 +183,7 @@ const categoryPatchToRow = (u: Partial<Category>): Record<string, unknown> => {
   if ('color' in u) r.color = u.color;
   if ('icon' in u) r.icon = u.icon ?? null;
   if ('isDefault' in u) r.is_default = u.isDefault;
+  if ('order' in u) r.sort_order = u.order;
   return r;
 };
 

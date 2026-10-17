@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '../../services/supabase';
 
 export const AuthScreen: React.FC = () => {
   const { signIn, signUp } = useAuth();
+  const allowSignup = import.meta.env.VITE_ALLOW_SIGNUP === 'true';
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,27 +66,29 @@ export const AuthScreen: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* Selector de modo */}
-              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl mb-5">
-                <button
-                  type="button"
-                  onClick={() => switchMode('login')}
-                  className={`py-2 text-sm font-semibold rounded-lg transition-all ${
-                    mode === 'login' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  Ingresar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMode('register')}
-                  className={`py-2 text-sm font-semibold rounded-lg transition-all ${
-                    mode === 'register' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  Crear cuenta
-                </button>
-              </div>
+              {/* Selector de modo (solo si el registro público está habilitado) */}
+              {allowSignup && (
+                <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl mb-5">
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className={`py-2 text-sm font-semibold rounded-lg transition-all ${
+                      mode === 'login' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Ingresar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode('register')}
+                    className={`py-2 text-sm font-semibold rounded-lg transition-all ${
+                      mode === 'register' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Crear cuenta
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>

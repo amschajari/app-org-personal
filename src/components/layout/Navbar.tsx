@@ -11,10 +11,12 @@ import {
   Sparkles,
   X,
   ExternalLink,
-  LogOut
+  LogOut,
+  Tags
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { CategoryManagerModal } from './CategoryManagerModal';
 import { ActiveTab } from '../../types';
 
 export const Navbar: React.FC = () => {
@@ -34,6 +36,7 @@ export const Navbar: React.FC = () => {
   const { signOut, user } = useAuth();
 
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
   // Close notifications on outside click
@@ -196,6 +199,16 @@ export const Navbar: React.FC = () => {
               )}
             </div>
 
+            {/* Botón Categorías */}
+            <button
+              onClick={() => setShowCategories(true)}
+              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              title="Gestionar categorías"
+              aria-label="Categorías"
+            >
+              <Tags className="w-5 h-5" />
+            </button>
+
             {/* Botón Acción Rápida: + Nueva Tarea */}
             <button
               onClick={() => openTaskModal()}
@@ -236,8 +249,9 @@ export const Navbar: React.FC = () => {
             );
           })}
         </div>
-
       </div>
+
+      <CategoryManagerModal isOpen={showCategories} onClose={() => setShowCategories(false)} />
     </header>
   );
 };

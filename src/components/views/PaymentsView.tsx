@@ -31,6 +31,10 @@ export const PaymentsView: React.FC = () => {
   const [recurrence, setRecurrence] = useState<RecurrenceType>('unica');
   const [notes, setNotes] = useState('');
   const [reminderDays, setReminderDays] = useState(2);
+  const [categoryId, setCategoryId] = useState('');
+
+  const defaultCategoryId = () =>
+    categories.find((c) => c.name === 'Finanzas')?.id || categories[0]?.id || '';
 
   const handleOpenCreate = () => {
     setPaymentToEdit(null);
@@ -42,6 +46,7 @@ export const PaymentsView: React.FC = () => {
     setRecurrence('unica');
     setNotes('');
     setReminderDays(2);
+    setCategoryId(defaultCategoryId());
     setIsModalOpen(true);
   };
 
@@ -55,6 +60,7 @@ export const PaymentsView: React.FC = () => {
     setRecurrence(p.recurrence || 'unica');
     setNotes(p.notes || '');
     setReminderDays(p.reminderDaysBefore ?? 2);
+    setCategoryId(p.categoryId || '');
     setIsModalOpen(true);
   };
 
@@ -78,6 +84,7 @@ export const PaymentsView: React.FC = () => {
         amount: parseFloat(amount) || 0,
         currency,
         entityName: entityName.trim() || undefined,
+        categoryId: categoryId || '',
         dueDate: dueDate || new Date().toISOString().split('T')[0],
         recurrence,
         reminderDaysBefore: Number(reminderDays),
@@ -89,7 +96,7 @@ export const PaymentsView: React.FC = () => {
         amount: parseFloat(amount) || 0,
         currency,
         entityName: entityName.trim() || undefined,
-        categoryId: categories.find((c) => c.name === 'Pagos y deudas')?.id || categories[0]?.id || '',
+        categoryId: categoryId || defaultCategoryId(),
         dueDate: dueDate || new Date().toISOString().split('T')[0],
         status: 'pendiente',
         recurrence,
@@ -395,6 +402,21 @@ export const PaymentsView: React.FC = () => {
                   placeholder="Ej: AFIP, Banco, Proveedor..."
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  Categoría
+                </label>
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
+                >
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

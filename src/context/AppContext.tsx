@@ -33,6 +33,7 @@ interface AppContextType {
   addCategory: (category: Omit<Category, 'id'>) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+  reorderCategories: (orderedIds: string[]) => void;
 
   // Financial Actions
   addPayment: (payment: Omit<FinancialCommitment, 'id' | 'createdAt'>) => void;
@@ -109,7 +110,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       await dataService.ensureSeedCategories(userId);
       const data = await dataService.loadAll(userId);
-      setCategories(data.categories);
+      setCategories([...data.categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
       setTasks(data.tasks);
       setPayments(data.payments);
     } catch (e) {
@@ -349,6 +350,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     dataService.deleteCategory(id).catch(e => reportError('eliminar categoría', e));
   };
 
+  const reorderCategories = (orderedIds: string[]) => {
+    if (!userId) return;
+    setCategories(prev => {
+      const map = new Map(prev.map(c => [c.id, c]));
+      return orderedIds
+        .map(id => map.get(id))
+        .filter((c): c is Category => Boolean(c))
+        .map((c, idx) => ({ ...c, order: idx }));
+    });
+    orderedIds.forEach((id, idx) => {
+      dataService.updateCategory(id, { order: idx }).catch(e => reportError('reordenar categorías', e));
+    });
+  };
+
   // Finanzas
   const addPayment = (paymentData: Omit<FinancialCommitment, 'id' | 'createdAt'>) => {
     if (!userId) return;
@@ -427,6 +442,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addCategory,
         updateCategory,
         deleteCategory,
+        reorderCategories,
         addPayment,
         updatePayment,
         togglePaymentStatus,
