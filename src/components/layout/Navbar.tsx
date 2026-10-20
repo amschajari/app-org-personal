@@ -12,11 +12,13 @@ import {
   X,
   ExternalLink,
   LogOut,
-  Tags
+  Tags,
+  KeyRound
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { CategoryManagerModal } from './CategoryManagerModal';
+import { ChangePasswordModal } from './ChangePasswordModal';
 import { ActiveTab } from '../../types';
 
 export const Navbar: React.FC = () => {
@@ -37,6 +39,7 @@ export const Navbar: React.FC = () => {
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
   // Close notifications on outside click
@@ -218,6 +221,16 @@ export const Navbar: React.FC = () => {
               <span className="hidden sm:inline">Nueva tarea</span>
             </button>
 
+            {/* Cambiar contraseña */}
+            <button
+              onClick={() => setShowPassword(true)}
+              className="p-2 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+              title="Cambiar contraseña"
+              aria-label="Cambiar contraseña"
+            >
+              <KeyRound className="w-5 h-5" />
+            </button>
+
             {/* Cerrar sesión */}
             <button
               onClick={() => signOut()}
@@ -252,6 +265,7 @@ export const Navbar: React.FC = () => {
       </div>
 
       <CategoryManagerModal isOpen={showCategories} onClose={() => setShowCategories(false)} />
+      <ChangePasswordModal isOpen={showPassword} onClose={() => setShowPassword(false)} />
     </header>
   );
 };
