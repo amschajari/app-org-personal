@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
+import {
   Sun, 
   Calendar, 
   CreditCard, 
@@ -13,10 +13,13 @@ import {
   LogOut,
   Tags,
   KeyRound,
-  BellRing
+  BellRing,
+  Moon,
+  MoreVertical
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../hooks/useTheme';
 import { CategoryManagerModal } from './CategoryManagerModal';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { ActiveTab } from '../../types';
@@ -40,17 +43,22 @@ export const Navbar: React.FC = () => {
   } = useApp();
 
   const { signOut, user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
 
-  // Close notifications on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
+      }
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -248,7 +256,7 @@ export const Navbar: React.FC = () => {
             {/* Botón Categorías */}
             <button
               onClick={() => setShowCategories(true)}
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              className="hidden sm:inline-flex p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               title="Gestionar categorías"
               aria-label="Categorías"
             >
@@ -267,22 +275,95 @@ export const Navbar: React.FC = () => {
             {/* Cambiar contraseña */}
             <button
               onClick={() => setShowPassword(true)}
-              className="p-2 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+              className="hidden sm:inline-flex p-2 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
               title="Cambiar contraseña"
               aria-label="Cambiar contraseña"
             >
               <KeyRound className="w-5 h-5" />
             </button>
 
+            {/* Tema claro / oscuro (desktop) */}
+            <button
+              onClick={toggleTheme}
+              className="hidden sm:inline-flex p-2 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+              title={theme === 'dark' ? 'Pasar a tema claro' : 'Pasar a tema oscuro'}
+              aria-label="Cambiar tema"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
             {/* Cerrar sesión */}
             <button
               onClick={() => signOut()}
-              className="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              className="hidden sm:inline-flex p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
               title={user?.email ? `Cerrar sesión (${user.email})` : 'Cerrar sesión'}
               aria-label="Cerrar sesión"
             >
               <LogOut className="w-5 h-5" />
             </button>
+
+            {/* Menú "más" (mobile) */}
+            <div className="sm:hidden relative" ref={moreRef}>
+              <button
+                onClick={() => setShowMoreMenu((v) => !v)}
+                className={`p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors ${
+                  showMoreMenu ? 'bg-slate-100 text-slate-900' : ''
+                }`}
+                title="Más opciones"
+                aria-label="Más opciones"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+
+              {showMoreMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <button
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      setShowCategories(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <Tags className="w-4 h-4 text-slate-400" />
+                    Categorías
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      toggleTheme();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    {theme === 'dark' ? (
+                      <Sun className="w-4 h-4 text-slate-400" />
+                    ) : (
+                      <Moon className="w-4 h-4 text-slate-400" />
+                    )}
+                    {theme === 'dark' ? 'Tema claro' : 'Tema oscuro'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      setShowPassword(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <KeyRound className="w-4 h-4 text-slate-400" />
+                    Cambiar contraseña
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      signOut();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
         </div>
