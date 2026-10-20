@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Loader2, Target, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useApp } from './context/AppContext';
 import { AuthScreen } from './components/auth/AuthScreen';
@@ -14,9 +14,14 @@ import { BreakdownModal } from './components/antiProcrastination/BreakdownModal'
 
 const LoadingScreen: React.FC<{ label?: string }> = ({ label = 'Cargando tus datos...' }) => (
   <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-3">
-    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-      <Target className="w-6 h-6 animate-pulse" />
-    </div>
+    <img
+      src="/logo.png"
+      alt="MemoDía"
+      width={48}
+      height={48}
+      decoding="async"
+      className="w-12 h-12 rounded-2xl object-cover ring-1 ring-slate-200 shadow-lg animate-pulse"
+    />
     <div className="flex items-center gap-2 text-slate-500 text-sm">
       <Loader2 className="w-4 h-4 animate-spin" />
       <span>{label}</span>

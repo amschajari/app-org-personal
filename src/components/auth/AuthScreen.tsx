@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, Mail, Lock, Loader2, AlertCircle, CheckCircle2, LogIn, UserPlus } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle, CheckCircle2, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { isSupabaseConfigured } from '../../services/supabase';
 
@@ -48,10 +48,15 @@ export const AuthScreen: React.FC = () => {
       <div className="w-full max-w-sm">
         {/* Marca */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-200 mb-3">
-            <Target className="w-6 h-6" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Productiva</h1>
+          <img
+            src="/logo.png"
+            alt="MemoDía"
+            width={56}
+            height={56}
+            decoding="async"
+            className="w-14 h-14 rounded-2xl object-cover ring-1 ring-slate-200 shadow-lg mb-3"
+          />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">MemoDía</h1>
           <p className="text-sm text-slate-500 mt-1">Tu centro de operaciones personal</p>
         </div>
 

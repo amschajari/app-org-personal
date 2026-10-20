@@ -7,7 +7,6 @@ import {
   Bell, 
   Plus, 
   Search, 
-  Target,
   Sparkles,
   X,
   ExternalLink,
@@ -74,19 +73,24 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16 gap-4">
           
           {/* Logo y Marca */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-sm shadow-indigo-200">
-              <Target className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-bold text-lg tracking-tight text-slate-900 flex items-center gap-1.5">
-                Productiva
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
-                  Personal
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo.png"
+                alt="MemoDía"
+                width={36}
+                height={36}
+                decoding="async"
+                className="w-9 h-9 rounded-xl object-cover ring-1 ring-slate-200 shadow-sm"
+              />
+              <div>
+                <span className="font-bold text-lg tracking-tight text-slate-900 flex items-center gap-1.5">
+                  MemoDía
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    Personal
+                  </span>
                 </span>
-              </span>
+              </div>
             </div>
-          </div>
 
           {/* Buscador Rápido */}
           <div className="hidden md:flex flex-1 max-w-xs relative items-center">

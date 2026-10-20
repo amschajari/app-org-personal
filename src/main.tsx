@@ -14,3 +14,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </AuthProvider>
   </React.StrictMode>
 );
+
+// Registrar el service worker para habilitar la instalación como PWA.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* el navegador puede no soportarlo o no ser contexto seguro */
+    });
+  });
+}
