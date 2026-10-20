@@ -82,14 +82,9 @@ export const Navbar: React.FC = () => {
                 decoding="async"
                 className="w-9 h-9 rounded-xl object-cover ring-1 ring-slate-200 shadow-sm"
               />
-              <div>
-                <span className="font-bold text-lg tracking-tight text-slate-900 flex items-center gap-1.5">
-                  MemoDía
-                  <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
-                    Personal
-                  </span>
-                </span>
-              </div>
+              <span className="font-brand font-semibold text-xl sm:text-2xl tracking-tight text-slate-900 leading-none">
+                MemoDía
+              </span>
             </div>
 
           {/* Buscador Rápido */}
@@ -141,7 +136,7 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* Acciones: Campanita & Botón Nueva Tarea */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             {/* Campanita de Notificaciones */}
             <div className="relative" ref={notifRef}>
               <button

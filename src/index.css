@@ -6,6 +6,14 @@
   }
 }
 
+@layer utilities {
+  /* Tipografía de marca: redondeada y amigable, acorde al logo */
+  .font-brand {
+    font-family: 'Fredoka', 'Plus Jakarta Sans', ui-rounded, system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
 /* Custom scrollbar for clean UI */
 ::-webkit-scrollbar {
   width: 6px;

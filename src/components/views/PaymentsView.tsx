@@ -331,8 +331,8 @@ export const PaymentsView: React.FC = () => {
       {/* Modal para Crear Compromiso Financiero */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900">
                 {paymentToEdit ? 'Editar Compromiso de Pago' : 'Nuevo Compromiso de Pago'}
               </h3>
@@ -344,7 +344,7 @@ export const PaymentsView: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateOrUpdate} className="space-y-3.5">
+            <form onSubmit={handleCreateOrUpdate} className="overflow-y-auto min-h-0 px-6 py-4 space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Concepto *

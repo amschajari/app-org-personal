@@ -107,7 +107,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
           </button>
         </div>
 
-        <div className="overflow-y-auto p-5 space-y-4">
+        <div className="overflow-y-auto min-h-0 p-5 space-y-4">
 
           {/* Nueva categoría */}
           <form onSubmit={handleAdd} className="flex items-center gap-2">

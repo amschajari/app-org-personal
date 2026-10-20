@@ -56,7 +56,7 @@ export const AuthScreen: React.FC = () => {
             decoding="async"
             className="w-14 h-14 rounded-2xl object-cover ring-1 ring-slate-200 shadow-lg mb-3"
           />
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">MemoDía</h1>
+          <h1 className="font-brand text-3xl font-semibold tracking-tight text-slate-900">MemoDía</h1>
           <p className="text-sm text-slate-500 mt-1">Tu centro de operaciones personal</p>
         </div>
 

@@ -116,7 +116,7 @@ export const TaskModal: React.FC = () => {
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto p-5 sm:p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="overflow-y-auto min-h-0 p-5 sm:p-6 space-y-4">
           
           {/* Título */}
           <div>
