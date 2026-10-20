@@ -58,7 +58,7 @@ export const Navbar: React.FC = () => {
 
   const navItems: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'mi-dia', label: 'Mi Día', icon: <Sun className="w-4 h-4" /> },
-    { id: 'proximos', label: 'Próximos', icon: <Calendar className="w-4 h-4" /> },
+    { id: 'proximos', label: 'Agenda', icon: <Calendar className="w-4 h-4" /> },
     { id: 'pagos', label: 'Pagos y Deudas', icon: <CreditCard className="w-4 h-4" />, badge: pendingPaymentsCount > 0 ? pendingPaymentsCount : undefined },
     { id: 'completados', label: 'Completados', icon: <CheckCircle2 className="w-4 h-4" />, badge: completedCount > 0 ? completedCount : undefined },
   ];

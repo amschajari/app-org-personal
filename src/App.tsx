@@ -5,7 +5,7 @@ import { useApp } from './context/AppContext';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { Navbar } from './components/layout/Navbar';
 import { MyDayView } from './components/views/MyDayView';
-import { UpcomingView } from './components/views/UpcomingView';
+import { AgendaView } from './components/agenda/AgendaView';
 import { PaymentsView } from './components/views/PaymentsView';
 import { CompletedView } from './components/views/CompletedView';
 import { TaskModal } from './components/tasks/TaskModal';
@@ -57,7 +57,7 @@ export const App: React.FC = () => {
       {/* Contenedor Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
         {activeTab === 'mi-dia' && <MyDayView />}
-        {activeTab === 'proximos' && <UpcomingView />}
+        {activeTab === 'proximos' && <AgendaView />}
         {activeTab === 'pagos' && <PaymentsView />}
         {activeTab === 'completados' && <CompletedView />}
       </main>

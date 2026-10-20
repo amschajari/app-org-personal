@@ -51,3 +51,39 @@ export const isTaskOverdue = (dateStr?: string): boolean => {
   const todayStr = new Date().toISOString().split('T')[0];
   return dateStr.split('T')[0] < todayStr;
 };
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Fecha local (sin desfase UTC) en formato YYYY-MM-DD. */
+export const toLocalISODate = (d: Date): string =>
+  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+/** Convierte 'YYYY-MM-DD' (o con hora) a Date local. */
+export const parseLocalISODate = (iso: string): Date => {
+  const [y, m, d] = iso.split('T')[0].split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+};
+
+export const MONTH_NAMES_ES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+/** Devuelve 42 días (6 semanas) desde el lunes anterior al día 1 del mes. */
+export const getMonthMatrix = (year: number, month: number): Date[] => {
+  const first = new Date(year, month, 1);
+  const offset = (first.getDay() + 6) % 7; // 0 = lunes
+  const start = new Date(year, month, 1 - offset);
+  return Array.from({ length: 42 }, (_, i) =>
+    new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
+  );
+};
+
+export const formatLongDate = (iso: string): string => {
+  const s = parseLocalISODate(iso).toLocaleDateString('es-AR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
