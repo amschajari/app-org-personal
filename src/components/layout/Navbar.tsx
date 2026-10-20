@@ -13,7 +13,8 @@ import {
   ExternalLink,
   LogOut,
   Tags,
-  KeyRound
+  KeyRound,
+  BellRing
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -32,7 +33,11 @@ export const Navbar: React.FC = () => {
     notifications,
     dismissNotification,
     tasks,
-    payments
+    payments,
+    notificationPermission,
+    requestNotificationPermission,
+    remindersEnabled,
+    setRemindersEnabled
   } = useApp();
 
   const { signOut, user } = useAuth();
@@ -196,6 +201,44 @@ export const Navbar: React.FC = () => {
                           </button>
                         </div>
                       ))
+                    )}
+                  </div>
+
+                  {/* Footer: activar recordatorios del navegador */}
+                  <div className="p-3 bg-slate-50/70 border-t border-slate-100">
+                    {notificationPermission === 'granted' ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <p
+                          className={`flex items-center gap-1.5 text-[11px] font-medium ${
+                            remindersEnabled ? 'text-emerald-700' : 'text-slate-500'
+                          }`}
+                        >
+                          <BellRing className="w-3.5 h-3.5" />
+                          {remindersEnabled ? 'Recordatorios activos' : 'Recordatorios pausados'}
+                        </p>
+                        <button
+                          onClick={() => setRemindersEnabled(!remindersEnabled)}
+                          className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 underline underline-offset-2"
+                        >
+                          {remindersEnabled ? 'Desactivar' : 'Activar'}
+                        </button>
+                      </div>
+                    ) : notificationPermission === 'unsupported' ? (
+                      <p className="text-[11px] text-slate-400">
+                        Este navegador no admite notificaciones.
+                      </p>
+                    ) : notificationPermission === 'denied' ? (
+                      <p className="text-[11px] leading-relaxed text-amber-700">
+                        Bloqueaste las notificaciones. Habilitalas desde el candado de la barra de direcciones.
+                      </p>
+                    ) : (
+                      <button
+                        onClick={() => requestNotificationPermission()}
+                        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors"
+                      >
+                        <BellRing className="w-3.5 h-3.5" />
+                        Activar recordatorios del navegador
+                      </button>
                     )}
                   </div>
                 </div>

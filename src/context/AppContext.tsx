@@ -4,6 +4,12 @@ import { Task, Category, FinancialCommitment, AppNotification, ActiveTab, Priori
 import { dataService, newId } from '../services/supabaseService';
 import { useAuth } from './AuthContext';
 import { isTaskOverdue, isTaskToday } from '../utils/dateUtils';
+import {
+  runReminderCheck,
+  getNotificationPermission,
+  requestNotificationPermission as requestNotificationPermissionUtil,
+  NotificationPermissionState,
+} from '../utils/reminders';
 
 interface AppContextType {
   tasks: Task[];
@@ -63,6 +69,11 @@ interface AppContextType {
   setIsNotificationOpen: (open: boolean) => void;
   unreadNotificationsCount: number;
   dismissNotification: (id: string) => void;
+
+  notificationPermission: NotificationPermissionState;
+  requestNotificationPermission: () => Promise<void>;
+  remindersEnabled: boolean;
+  setRemindersEnabled: (enabled: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -90,6 +101,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [dismissedNotificationIds, setDismissedNotificationIds] = useState<string[]>([]);
   const [lastCompletedTask, setLastCompletedTask] = useState<Task | null>(null);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermissionState>(getNotificationPermission());
+
+  const REMINDERS_KEY = 'productiva:reminders-enabled';
+  const [remindersEnabled, setRemindersEnabledState] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(REMINDERS_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
+  const setRemindersEnabled = (enabled: boolean) => {
+    setRemindersEnabledState(enabled);
+    try {
+      localStorage.setItem(REMINDERS_KEY, enabled ? 'true' : 'false');
+    } catch {
+      /* almacenamiento no disponible */
+    }
+  };
 
   const reportError = useCallback((context: string, e: unknown) => {
     console.error(`[Productiva] ${context}:`, e);
@@ -193,6 +224,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const dismissNotification = (id: string) => {
     setDismissedNotificationIds(prev => [...prev, id]);
+  };
+
+  // Recordatorios del navegador (mientra la app está abierta)
+  useEffect(() => {
+    if (notificationPermission !== 'granted' || !remindersEnabled) return;
+    runReminderCheck(tasks, payments);
+    const id = window.setInterval(() => runReminderCheck(tasks, payments), 60_000);
+    return () => window.clearInterval(id);
+  }, [notificationPermission, remindersEnabled, tasks, payments]);
+
+  const requestNotificationPermission = async () => {
+    const p = await requestNotificationPermissionUtil();
+    setNotificationPermission(p);
+    if (p === 'granted') {
+      setRemindersEnabled(true);
+      runReminderCheck(tasks, payments);
+    }
   };
 
   // Acciones de Tareas
@@ -463,6 +511,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsNotificationOpen,
         unreadNotificationsCount,
         dismissNotification,
+        notificationPermission,
+        requestNotificationPermission,
+        remindersEnabled,
+        setRemindersEnabled,
       }}
     >
       {children}
