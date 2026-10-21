@@ -101,7 +101,9 @@ export const nextRecurrenceDate = (
   const base = parseLocalISODate(dueDate);
   if (Number.isNaN(base.getTime())) return undefined;
 
-  if (recurrence === 'semanal') {
+  if (recurrence === 'diaria') {
+    base.setDate(base.getDate() + 1);
+  } else if (recurrence === 'semanal') {
     base.setDate(base.getDate() + 7);
   } else if (recurrence === 'mensual') {
     const day = base.getDate();

@@ -48,7 +48,15 @@ export interface Task {
 }
 
 export type PaymentStatus = 'pendiente' | 'pagado' | 'vencido';
-export type RecurrenceType = 'unica' | 'semanal' | 'mensual' | 'anual';
+export type RecurrenceType = 'unica' | 'diaria' | 'semanal' | 'mensual' | 'anual';
+
+export const RECURRENCE_LABELS: Record<string, string> = {
+  unica: 'Unica vez',
+  diaria: 'Diario',
+  semanal: 'Semanal',
+  mensual: 'Mensual',
+  anual: 'Anual',
+};
 
 export interface FinancialCommitment {
   id: string;

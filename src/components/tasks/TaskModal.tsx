@@ -268,6 +268,7 @@ export const TaskModal: React.FC = () => {
               className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500 text-slate-800"
             >
               <option value="unica">No se repite</option>
+              <option value="diaria">Todos los días</option>
               <option value="semanal">Cada semana</option>
               <option value="mensual">Cada mes</option>
               <option value="anual">Cada año</option>

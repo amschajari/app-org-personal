@@ -23,7 +23,7 @@ import { Task, FinancialCommitment } from '../../types';
 const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 export const AgendaView: React.FC = () => {
-  const { tasks, payments, openTaskModal, togglePaymentStatus, setActiveTab } = useApp();
+  const { tasks, payments, categories, openTaskModal, togglePaymentStatus, setActiveTab } = useApp();
 
   const todayIso = toLocalISODate(new Date());
 
@@ -53,6 +53,14 @@ export const AgendaView: React.FC = () => {
     });
     return map;
   }, [payments]);
+
+  const categoryColors = useMemo(() => {
+    const map: Record<string, string> = {};
+    categories.forEach((c) => {
+      map[c.id] = c.color;
+    });
+    return map;
+  }, [categories]);
 
   const matrix = useMemo(() => getMonthMatrix(cursor.year, cursor.month), [cursor]);
 
@@ -172,6 +180,9 @@ export const AgendaView: React.FC = () => {
                   const dTasks = tasksByDate[iso] || [];
                   const dPayments = paymentsByDate[iso] || [];
                   const total = dTasks.length + dPayments.length;
+                  const dTaskColors = Array.from(
+                    new Set(dTasks.map((t) => categoryColors[t.categoryId] || '#6366f1'))
+                  ).slice(0, 3);
 
                   return (
                     <button
@@ -195,7 +206,10 @@ export const AgendaView: React.FC = () => {
                       <div className="hidden sm:block mt-1 space-y-0.5 overflow-hidden">
                         {dTasks.slice(0, 2).map((t) => (
                           <div key={t.id} className="flex items-center gap-1 text-[10px] leading-tight">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                            <span
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: categoryColors[t.categoryId] || '#6366f1' }}
+                            />
                             <span
                               className={`truncate ${
                                 t.status === 'completada' ? 'line-through text-slate-400' : 'text-slate-600'
@@ -224,7 +238,13 @@ export const AgendaView: React.FC = () => {
 
                       {/* Puntos en mobile */}
                       <div className="sm:hidden mt-auto flex items-center gap-0.5">
-                        {dTasks.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />}
+                        {dTaskColors.map((color) => (
+                          <span
+                            key={color}
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
                         {dPayments.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />}
                       </div>
                     </button>

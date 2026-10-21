@@ -14,7 +14,7 @@ import {
   RotateCcw,
   Repeat
 } from 'lucide-react';
-import { Task, Category } from '../../types';
+import { Task, Category, RECURRENCE_LABELS } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { formatDate, isTaskOverdue, isTaskToday } from '../../utils/dateUtils';
 
@@ -22,11 +22,6 @@ interface TaskItemProps {
   task: Task;
 }
 
-const RECURRENCE_LABELS: Record<string, string> = {
-  semanal: 'Semanal',
-  mensual: 'Mensual',
-  anual: 'Anual',
-};
 
 export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   const { 

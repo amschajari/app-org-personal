@@ -13,7 +13,7 @@ import {
   Edit3
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { FinancialCommitment, PaymentStatus, RecurrenceType } from '../../types';
+import { FinancialCommitment, PaymentStatus, RecurrenceType, RECURRENCE_LABELS } from '../../types';
 import { formatDate, toLocalISODate } from '../../utils/dateUtils';
 import { useBackToClose } from '../../hooks/useBackToClose';
 
@@ -235,9 +235,9 @@ export const PaymentsView: React.FC = () => {
                           Vence: {formatDate(p.dueDate)}
                         </span>
                         <span>•</span>
-                        <span className="flex items-center gap-1 text-slate-500 capitalize">
+                        <span className="flex items-center gap-1 text-slate-500">
                           <Repeat className="w-3 h-3" />
-                          {p.recurrence}
+                          {RECURRENCE_LABELS[p.recurrence] || p.recurrence}
                         </span>
                       </div>
                       {p.notes && <p className="text-xs text-slate-400 mt-1">{p.notes}</p>}
@@ -444,6 +444,7 @@ export const PaymentsView: React.FC = () => {
                     className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
                   >
                     <option value="unica">Única vez</option>
+                    <option value="diaria">Diario</option>
                     <option value="mensual">Mensual</option>
                     <option value="semanal">Semanal</option>
                     <option value="anual">Anual</option>
