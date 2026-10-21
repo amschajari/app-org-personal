@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, Tag, Flag, AlertCircle, Plus, Check, Repeat } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackToClose } from '../../hooks/useBackToClose';
 import { Priority, RecurrenceType } from '../../types';
 import { formatDate, nextRecurrenceDate, toLocalISODate } from '../../utils/dateUtils';
 
@@ -48,6 +49,8 @@ export const TaskModal: React.FC = () => {
       setSubtasksInput([]);
     }
   }, [taskToEdit, isTaskModalOpen, categories, taskDefaultValues]);
+
+  useBackToClose(isTaskModalOpen, closeTaskModal);
 
   if (!isTaskModalOpen) return null;
 

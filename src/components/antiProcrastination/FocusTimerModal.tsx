@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, X, CheckCircle2, Flame } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackToClose } from '../../hooks/useBackToClose';
 
 export const FocusTimerModal: React.FC = () => {
   const { focusTask, closeFocusTimer, toggleCompleteTask } = useApp();
@@ -29,6 +30,8 @@ export const FocusTimerModal: React.FC = () => {
 
     return () => clearInterval(timer);
   }, [isRunning, secondsLeft]);
+
+  useBackToClose(!!focusTask, closeFocusTimer);
 
   if (!focusTask) return null;
 

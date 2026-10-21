@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Tags, Plus, Trash2, ChevronUp, ChevronDown, Check, Pencil, AlertCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { CATEGORY_COLORS } from '../../services/seed';
+import { useBackToClose } from '../../hooks/useBackToClose';
 
 interface CategoryManagerModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [message, setMessage] = useState<Message>(null);
+
+  useBackToClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

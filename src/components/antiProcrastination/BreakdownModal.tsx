@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, Check, Split, Sparkles, ArrowRight } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackToClose } from '../../hooks/useBackToClose';
 
 export const BreakdownModal: React.FC = () => {
   const { 
@@ -12,6 +13,8 @@ export const BreakdownModal: React.FC = () => {
   } = useApp();
 
   const [newStepText, setNewStepText] = useState('');
+
+  useBackToClose(!!breakdownTask, closeBreakdownModal);
 
   if (!breakdownTask) return null;
 

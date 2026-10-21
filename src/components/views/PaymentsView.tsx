@@ -15,6 +15,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { FinancialCommitment, PaymentStatus, RecurrenceType } from '../../types';
 import { formatDate, toLocalISODate } from '../../utils/dateUtils';
+import { useBackToClose } from '../../hooks/useBackToClose';
 
 export const PaymentsView: React.FC = () => {
   const { payments, categories, addPayment, updatePayment, togglePaymentStatus, deletePayment } = useApp();
@@ -32,6 +33,8 @@ export const PaymentsView: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [reminderDays, setReminderDays] = useState(2);
   const [categoryId, setCategoryId] = useState('');
+
+  useBackToClose(isModalOpen, () => setIsModalOpen(false));
 
   const defaultCategoryId = () =>
     categories.find((c) => c.name === 'Finanzas')?.id || categories[0]?.id || '';

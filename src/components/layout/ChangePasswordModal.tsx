@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { KeyRound, X, Loader2, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useBackToClose } from '../../hooks/useBackToClose';
 
 interface Props {
   isOpen: boolean;
@@ -15,6 +16,8 @@ export const ChangePasswordModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  useBackToClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
