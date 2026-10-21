@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Task, Category, FinancialCommitment, AppNotification, ActiveTab, Priority, SubTask } from '../types';
 import { dataService, newId } from '../services/supabaseService';
@@ -89,8 +89,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('mi-dia');
+  const [activeTab, setActiveTabState] = useState<ActiveTab>('mi-dia');
+  const activeTabRef = useRef<ActiveTab>('mi-dia');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const setActiveTab = (tab: ActiveTab) => {
+    if (tab === activeTabRef.current) return;
+    activeTabRef.current = tab;
+    setActiveTabState(tab);
+    window.history.pushState({ memodiaTab: tab }, '');
+  };
+
+  useEffect(() => {
+    window.history.replaceState(
+      { ...(window.history.state || {}), memodiaTab: activeTabRef.current },
+      ''
+    );
+
+    const handlePopState = (e: PopStateEvent) => {
+      const tab = (e.state?.memodiaTab as ActiveTab | undefined) ?? 'mi-dia';
+      activeTabRef.current = tab;
+      setActiveTabState(tab);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Modals state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);

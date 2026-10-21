@@ -123,19 +123,19 @@ export const MyDayView: React.FC = () => {
               value={quickInput}
               onChange={(e) => setQuickInput(e.target.value)}
               placeholder="Agregar tarea rápida para hoy (presioná Enter)..."
-              className="flex-1 text-sm bg-transparent border-none text-slate-800 placeholder:text-slate-400 focus:outline-none"
+              className="flex-1 min-w-0 text-sm bg-transparent border-none text-slate-800 placeholder:text-slate-400 focus:outline-none"
             />
             <button
               type="submit"
               disabled={!quickInput.trim()}
-              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-30 text-white text-xs font-semibold rounded-xl transition-all"
+              className="shrink-0 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-30 text-white text-xs font-semibold rounded-xl transition-all"
             >
               Agregar
             </button>
             <button
               type="button"
               onClick={() => openTaskModal(null, { dueDate: todayStr })}
-              className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+              className="shrink-0 text-xs text-slate-400 hover:text-slate-600 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
               title="Abrir formulario detallado"
             >
               Detalles
