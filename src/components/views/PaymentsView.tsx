@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { FinancialCommitment, PaymentStatus, RecurrenceType } from '../../types';
-import { formatDate } from '../../utils/dateUtils';
+import { formatDate, toLocalISODate } from '../../utils/dateUtils';
 
 export const PaymentsView: React.FC = () => {
   const { payments, categories, addPayment, updatePayment, togglePaymentStatus, deletePayment } = useApp();
@@ -42,7 +42,7 @@ export const PaymentsView: React.FC = () => {
     setAmount('');
     setCurrency('ARS');
     setEntityName('');
-    setDueDate(new Date().toISOString().split('T')[0]);
+    setDueDate(toLocalISODate(new Date()));
     setRecurrence('unica');
     setNotes('');
     setReminderDays(2);
@@ -85,7 +85,7 @@ export const PaymentsView: React.FC = () => {
         currency,
         entityName: entityName.trim() || undefined,
         categoryId: categoryId || '',
-        dueDate: dueDate || new Date().toISOString().split('T')[0],
+        dueDate: dueDate || toLocalISODate(new Date()),
         recurrence,
         reminderDaysBefore: Number(reminderDays),
         notes: notes.trim() || undefined,
@@ -97,7 +97,7 @@ export const PaymentsView: React.FC = () => {
         currency,
         entityName: entityName.trim() || undefined,
         categoryId: categoryId || defaultCategoryId(),
-        dueDate: dueDate || new Date().toISOString().split('T')[0],
+        dueDate: dueDate || toLocalISODate(new Date()),
         status: 'pendiente',
         recurrence,
         reminderDaysBefore: Number(reminderDays),
@@ -114,7 +114,7 @@ export const PaymentsView: React.FC = () => {
     setNotes('');
   };
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = toLocalISODate(new Date());
 
   const pendingPayments = payments.filter((p) => p.status === 'pendiente');
   const paidPayments = payments.filter((p) => p.status === 'pagado');

@@ -50,6 +50,7 @@ create table if not exists public.tasks (
   estimated_minutes int,
   due_date date,
   reminder_at timestamptz,
+  recurrence text not null default 'unica',
   postponement_count int not null default 0,
   last_postponed_at timestamptz,
   created_at timestamptz not null default now(),
@@ -127,3 +128,8 @@ begin
     execute format('create policy %I on public.%I for delete using (auth.uid() = user_id)', t || '_delete_own', t);
   end loop;
 end $$;
+
+-- -------------------------------------------------------------
+-- Migraciones para bases ya existentes
+-- -------------------------------------------------------------
+alter table public.tasks add column if not exists recurrence text not null default 'unica';

@@ -2,21 +2,21 @@ import React from 'react';
 import { Calendar, Plus, Inbox, Clock, ChevronRight } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { TaskItem } from '../tasks/TaskItem';
-import { formatDate } from '../../utils/dateUtils';
+import { formatDate, toLocalISODate } from '../../utils/dateUtils';
 
 export const UpcomingView: React.FC = () => {
   const { tasks, openTaskModal, searchQuery } = useApp();
 
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = toLocalISODate(now);
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  const tomorrowStr = toLocalISODate(tomorrow);
 
   const inSevenDays = new Date();
   inSevenDays.setDate(inSevenDays.getDate() + 7);
-  const inSevenDaysStr = inSevenDays.toISOString().split('T')[0];
+  const inSevenDaysStr = toLocalISODate(inSevenDays);
 
   const pendingTasks = tasks.filter((t) => t.status !== 'completada' && (!searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase())));
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Check, 
   Calendar, 
@@ -10,7 +11,8 @@ import {
   Split, 
   Play, 
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
+  Repeat
 } from 'lucide-react';
 import { Task, Category } from '../../types';
 import { useApp } from '../../context/AppContext';
@@ -19,6 +21,12 @@ import { formatDate, isTaskOverdue, isTaskToday } from '../../utils/dateUtils';
 interface TaskItemProps {
   task: Task;
 }
+
+const RECURRENCE_LABELS: Record<string, string> = {
+  semanal: 'Semanal',
+  mensual: 'Mensual',
+  anual: 'Anual',
+};
 
 export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   const { 
@@ -32,17 +40,49 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   } = useApp();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+    if (!menuOpen) return;
+
+    const place = () => {
+      const btn = buttonRef.current;
+      const panel = panelRef.current;
+      if (!btn || !panel) return;
+      const r = btn.getBoundingClientRect();
+      const pw = panel.offsetWidth;
+      const ph = panel.offsetHeight;
+      const left = Math.min(Math.max(8, r.right - pw), window.innerWidth - pw - 8);
+      const top =
+        r.bottom + ph + 8 > window.innerHeight ? Math.max(8, r.top - ph - 4) : r.bottom + 4;
+      setMenuPos({ top, left });
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
+    const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (panelRef.current?.contains(target) || buttonRef.current?.contains(target)) return;
+      setMenuOpen(false);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+
+    place();
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [menuOpen]);
 
   const category = categories.find((c) => c.id === task.categoryId);
   const isCompleted = task.status === 'completada';
@@ -100,6 +140,17 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
               }}
             >
               {category.name}
+            </span>
+          )}
+
+          {/* Badge de Repetición */}
+          {task.recurrence && task.recurrence !== 'unica' && (
+            <span
+              className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 flex items-center gap-1"
+              title={`Se repite: ${RECURRENCE_LABELS[task.recurrence]}`}
+            >
+              <Repeat className="w-2.5 h-2.5" />
+              {RECURRENCE_LABELS[task.recurrence]}
             </span>
           )}
 
@@ -178,17 +229,31 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
       </div>
 
       {/* Menú de Acciones Rápidas */}
-      <div className="relative shrink-0" ref={menuRef}>
+      <div className="relative shrink-0">
         <button
-          onClick={() => setMenuOpen(!menuOpen)}
+          ref={buttonRef}
+          onClick={() => {
+            setMenuPos(null);
+            setMenuOpen((v) => !v);
+          }}
           className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
           title="Opciones de tarea"
         >
           <MoreHorizontal className="w-4 h-4" />
         </button>
+      </div>
 
-        {menuOpen && (
-          <div className="absolute right-0 mt-1 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-20 animate-in fade-in zoom-in-95 duration-100">
+      {menuOpen &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{
+              top: menuPos?.top ?? -9999,
+              left: menuPos?.left ?? -9999,
+              visibility: menuPos ? 'visible' : 'hidden',
+            }}
+            className="fixed w-48 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100"
+          >
             {!isCompleted && (
               <>
                 <button
@@ -251,9 +316,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
               <Trash2 className="w-3.5 h-3.5" />
               <span>Eliminar definitivamente</span>
             </button>
-          </div>
+          </div>,
+          document.body
         )}
-      </div>
 
     </div>
   );

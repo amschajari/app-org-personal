@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, Tag, Flag, AlertCircle, Plus, Check } from 'lucide-react';
+import { X, Calendar, Clock, Tag, Flag, AlertCircle, Plus, Check, Repeat } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { Priority } from '../../types';
+import { Priority, RecurrenceType } from '../../types';
+import { formatDate, nextRecurrenceDate, toLocalISODate } from '../../utils/dateUtils';
 
 export const TaskModal: React.FC = () => {
   const { 
     isTaskModalOpen, 
     closeTaskModal, 
     taskToEdit, 
+    taskDefaultValues,
     addTask, 
     updateTask, 
     categories 
@@ -18,6 +20,7 @@ export const TaskModal: React.FC = () => {
   const [categoryId, setCategoryId] = useState('');
   const [priority, setPriority] = useState<Priority>('media');
   const [dueDate, setDueDate] = useState('');
+  const [recurrence, setRecurrence] = useState<RecurrenceType>('unica');
   const [estimatedMinutes, setEstimatedMinutes] = useState<number>(25);
   const [subtasksInput, setSubtasksInput] = useState<string[]>([]);
   const [newSubtask, setNewSubtask] = useState('');
@@ -30,34 +33,34 @@ export const TaskModal: React.FC = () => {
       setCategoryId(taskToEdit.categoryId);
       setPriority(taskToEdit.priority);
       setDueDate(taskToEdit.dueDate || '');
+      setRecurrence(taskToEdit.recurrence || 'unica');
       setEstimatedMinutes(taskToEdit.estimatedMinutes || 25);
       setSubtasksInput([]);
     } else {
       // Valores por defecto para nueva tarea
-      setTitle('');
-      setDescription('');
-      setCategoryId(categories[0]?.id || '');
-      setPriority('media');
-      // Por defecto para hoy
-      const today = new Date().toISOString().split('T')[0];
-      setDueDate(today);
-      setEstimatedMinutes(25);
+      setTitle(taskDefaultValues?.title || '');
+      setDescription(taskDefaultValues?.description || '');
+      setCategoryId(taskDefaultValues?.categoryId || categories[0]?.id || '');
+      setPriority(taskDefaultValues?.priority || 'media');
+      setDueDate(taskDefaultValues?.dueDate || toLocalISODate(new Date()));
+      setRecurrence(taskDefaultValues?.recurrence || 'unica');
+      setEstimatedMinutes(taskDefaultValues?.estimatedMinutes || 25);
       setSubtasksInput([]);
     }
-  }, [taskToEdit, isTaskModalOpen, categories]);
+  }, [taskToEdit, isTaskModalOpen, categories, taskDefaultValues]);
 
   if (!isTaskModalOpen) return null;
 
   const handleQuickDate = (type: 'today' | 'tomorrow' | 'nextWeek' | 'none') => {
     const d = new Date();
     if (type === 'today') {
-      setDueDate(d.toISOString().split('T')[0]);
+      setDueDate(toLocalISODate(d));
     } else if (type === 'tomorrow') {
       d.setDate(d.getDate() + 1);
-      setDueDate(d.toISOString().split('T')[0]);
+      setDueDate(toLocalISODate(d));
     } else if (type === 'nextWeek') {
       d.setDate(d.getDate() + 7);
-      setDueDate(d.toISOString().split('T')[0]);
+      setDueDate(toLocalISODate(d));
     } else {
       setDueDate('');
     }
@@ -80,6 +83,7 @@ export const TaskModal: React.FC = () => {
         categoryId: categoryId || categories[0]?.id || '',
         priority,
         dueDate: dueDate || undefined,
+        recurrence,
         estimatedMinutes: Number(estimatedMinutes) || 25,
       });
     } else {
@@ -90,6 +94,7 @@ export const TaskModal: React.FC = () => {
         priority,
         status: 'pendiente',
         dueDate: dueDate || undefined,
+        recurrence,
         estimatedMinutes: Number(estimatedMinutes) || 25,
         subtasks: subtasksInput,
       });
@@ -246,6 +251,33 @@ export const TaskModal: React.FC = () => {
               onChange={(e) => setDueDate(e.target.value)}
               className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500 text-slate-800"
             />
+          </div>
+
+          {/* Repetición */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <Repeat className="w-3.5 h-3.5 text-slate-400" />
+              Repetir
+            </label>
+            <select
+              value={recurrence}
+              onChange={(e) => setRecurrence(e.target.value as RecurrenceType)}
+              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500 text-slate-800"
+            >
+              <option value="unica">No se repite</option>
+              <option value="semanal">Cada semana</option>
+              <option value="mensual">Cada mes</option>
+              <option value="anual">Cada año</option>
+            </select>
+            {recurrence !== 'unica' && dueDate && (
+              <p className="text-[11px] text-slate-400 mt-1">
+                Al completarla se crea la siguiente para el{' '}
+                <span className="font-medium text-slate-500">
+                  {formatDate(nextRecurrenceDate(dueDate, recurrence))}
+                </span>
+                .
+              </p>
+            )}
           </div>
 
           {/* Tiempo estimado */}

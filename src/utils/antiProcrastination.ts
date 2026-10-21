@@ -1,4 +1,5 @@
 import { Task } from '../types';
+import { toLocalISODate } from './dateUtils';
 
 export interface ScoredTask {
   task: Task;
@@ -11,7 +12,7 @@ export const calculateTaskScore = (task: Task): ScoredTask => {
   const reasons: string[] = [];
 
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = toLocalISODate(now);
 
   // 1. Urgencia Temporal
   if (task.dueDate) {

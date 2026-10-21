@@ -44,6 +44,7 @@ interface TaskRow {
   estimated_minutes: number | null;
   due_date: string | null;
   reminder_at: string | null;
+  recurrence: string | null;
   postponement_count: number;
   last_postponed_at: string | null;
   created_at: string;
@@ -107,6 +108,7 @@ const toTask = (r: TaskRow, subtasks: SubTask[]): Task => ({
   estimatedMinutes: r.estimated_minutes ?? undefined,
   dueDate: r.due_date ?? undefined,
   reminderAt: r.reminder_at ?? undefined,
+  recurrence: (r.recurrence as RecurrenceType) ?? 'unica',
   subtasks,
   postponementCount: r.postponement_count,
   lastPostponedAt: r.last_postponed_at ?? undefined,
@@ -146,6 +148,7 @@ const taskToRow = (userId: string, t: Task) => ({
   estimated_minutes: t.estimatedMinutes ?? null,
   due_date: emptyToNull(t.dueDate),
   reminder_at: t.reminderAt ?? null,
+  recurrence: t.recurrence ?? 'unica',
   postponement_count: t.postponementCount ?? 0,
   last_postponed_at: t.lastPostponedAt ?? null,
   created_at: t.createdAt,
@@ -163,6 +166,7 @@ const taskPatchToRow = (u: Partial<Task>): Record<string, unknown> => {
   if ('estimatedMinutes' in u) r.estimated_minutes = u.estimatedMinutes ?? null;
   if ('dueDate' in u) r.due_date = emptyToNull(u.dueDate);
   if ('reminderAt' in u) r.reminder_at = u.reminderAt ?? null;
+  if ('recurrence' in u) r.recurrence = u.recurrence ?? 'unica';
   if ('postponementCount' in u) r.postponement_count = u.postponementCount ?? 0;
   if ('lastPostponedAt' in u) r.last_postponed_at = u.lastPostponedAt ?? null;
   if ('completedAt' in u) r.completed_at = u.completedAt ?? null;
@@ -218,6 +222,17 @@ const paymentPatchToRow = (u: Partial<FinancialCommitment>): Record<string, unkn
   if ('notes' in u) r.notes = u.notes ?? null;
   if ('paidAt' in u) r.paid_at = u.paidAt ?? null;
   return r;
+};
+
+const mentionsRecurrenceColumn = (e: unknown): boolean => {
+  const msg = (e as { message?: string } | null)?.message ?? String(e);
+  return msg.toLowerCase().includes('recurrence');
+};
+
+const withoutRecurrence = (row: Record<string, unknown>): Record<string, unknown> => {
+  const copy = { ...row };
+  delete copy.recurrence;
+  return copy;
 };
 
 // ------------------------------------------------------------------
@@ -283,7 +298,11 @@ export const dataService = {
 
   // ---- Tareas ----
   async insertTask(userId: string, task: Task): Promise<void> {
-    const { error } = await supabase.from('tasks').insert(taskToRow(userId, task));
+    const row = taskToRow(userId, task);
+    let { error } = await supabase.from('tasks').insert(row);
+    if (error && mentionsRecurrenceColumn(error)) {
+      ({ error } = await supabase.from('tasks').insert(withoutRecurrence(row)));
+    }
     if (error) throw error;
 
     if (task.subtasks.length > 0) {
@@ -301,9 +320,14 @@ export const dataService = {
   },
 
   async updateTask(id: string, updates: Partial<Task>): Promise<void> {
-    const row = taskPatchToRow(updates);
+    let row = taskPatchToRow(updates);
     if (Object.keys(row).length === 0) return;
-    const { error } = await supabase.from('tasks').update(row).eq('id', id);
+    let { error } = await supabase.from('tasks').update(row).eq('id', id);
+    if (error && mentionsRecurrenceColumn(error)) {
+      row = withoutRecurrence(row);
+      if (Object.keys(row).length === 0) return;
+      ({ error } = await supabase.from('tasks').update(row).eq('id', id));
+    }
     if (error) throw error;
   },
 

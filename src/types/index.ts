@@ -39,6 +39,7 @@ export interface Task {
   estimatedMinutes?: number; // 5, 15, 30, 45, 60...
   dueDate?: string; // ISO date string YYYY-MM-DD or YYYY-MM-DDTHH:mm
   reminderAt?: string; // ISO string
+  recurrence?: RecurrenceType;
   subtasks: SubTask[];
   postponementCount: number; // Incrementa cuando se reprograma para detectar procrastinación
   lastPostponedAt?: string;

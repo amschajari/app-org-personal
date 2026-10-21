@@ -1,5 +1,6 @@
-export const formatDate = (dateStr?: string): string => {
-  if (!dateStr) return 'Sin fecha';
+import type { RecurrenceType } from '../types';
+
+export const formatDate = (dateStr?: string): string => {  if (!dateStr) return 'Sin fecha';
   
   // Format YYYY-MM-DD
   const parts = dateStr.split('T')[0].split('-');
@@ -42,13 +43,13 @@ export const getGreeting = (): { greeting: string; dateText: string } => {
 
 export const isTaskToday = (dateStr?: string): boolean => {
   if (!dateStr) return false;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = toLocalISODate(new Date());
   return dateStr.split('T')[0] === todayStr;
 };
 
 export const isTaskOverdue = (dateStr?: string): boolean => {
   if (!dateStr) return false;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = toLocalISODate(new Date());
   return dateStr.split('T')[0] < todayStr;
 };
 
@@ -86,4 +87,31 @@ export const formatLongDate = (iso: string): string => {
     month: 'long',
   });
   return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+/**
+ * Próxima fecha de una tarea recurrente, conservando el día del mes
+ * (si el mes siguiente es más corto, usa su último día).
+ */
+export const nextRecurrenceDate = (
+  dueDate: string | undefined,
+  recurrence: RecurrenceType | undefined
+): string | undefined => {
+  if (!dueDate || !recurrence || recurrence === 'unica') return undefined;
+  const base = parseLocalISODate(dueDate);
+  if (Number.isNaN(base.getTime())) return undefined;
+
+  if (recurrence === 'semanal') {
+    base.setDate(base.getDate() + 7);
+  } else if (recurrence === 'mensual') {
+    const day = base.getDate();
+    base.setDate(1);
+    base.setMonth(base.getMonth() + 1);
+    const lastDay = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+    base.setDate(Math.min(day, lastDay));
+  } else if (recurrence === 'anual') {
+    base.setFullYear(base.getFullYear() + 1);
+  }
+
+  return toLocalISODate(base);
 };

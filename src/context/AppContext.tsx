@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti';
 import { Task, Category, FinancialCommitment, AppNotification, ActiveTab, Priority, SubTask } from '../types';
 import { dataService, newId } from '../services/supabaseService';
 import { useAuth } from './AuthContext';
-import { isTaskOverdue, isTaskToday } from '../utils/dateUtils';
+import { isTaskOverdue, isTaskToday, nextRecurrenceDate, toLocalISODate } from '../utils/dateUtils';
 import {
   runReminderCheck,
   getNotificationPermission,
@@ -54,6 +54,7 @@ interface AppContextType {
   // Modals & Panels
   isTaskModalOpen: boolean;
   taskToEdit: Task | null;
+  taskDefaultValues: Partial<Task> | null;
   openTaskModal: (task?: Task | null, defaultValues?: Partial<Task>) => void;
   closeTaskModal: () => void;
 
@@ -159,7 +160,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Generador dinámico de notificaciones in-app
   const notifications = useMemo(() => {
     const list: AppNotification[] = [];
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = toLocalISODate(new Date());
 
     tasks.filter(t => t.status !== 'completada' && isTaskOverdue(t.dueDate)).forEach(t => {
       list.push({
@@ -277,6 +278,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     dataService.deleteTask(id).catch(e => reportError('eliminar tarea', e));
   };
 
+  const createNextOccurrence = (task: Task) => {
+    const nextDate = nextRecurrenceDate(task.dueDate, task.recurrence);
+    if (!nextDate) return;
+
+    const alreadyExists = tasks.some(
+      (t) =>
+        t.status !== 'completada' &&
+        t.title.trim().toLowerCase() === task.title.trim().toLowerCase() &&
+        (t.dueDate || '').split('T')[0] === nextDate
+    );
+    if (alreadyExists) return;
+
+    addTask({
+      title: task.title,
+      description: task.description,
+      categoryId: task.categoryId,
+      projectId: task.projectId,
+      priority: task.priority,
+      status: 'pendiente',
+      dueDate: nextDate,
+      recurrence: task.recurrence,
+      estimatedMinutes: task.estimatedMinutes,
+      subtasks: task.subtasks.map((s) => s.title),
+    });
+  };
+
   const toggleCompleteTask = (id: string) => {
     const current = tasks.find(t => t.id === id);
     if (!current) return;
@@ -299,6 +326,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch {
         // Ignorar si el navegador bloquea
       }
+      createNextOccurrence(current);
     } else {
       setLastCompletedTask(null);
     }
@@ -322,7 +350,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const current = tasks.find(t => t.id === id);
     const d = new Date();
     d.setDate(d.getDate() + daysOffset);
-    const newDueDate = d.toISOString().split('T')[0];
+    const newDueDate = toLocalISODate(d);
     const lastPostponedAt = new Date().toISOString();
     const postponementCount = (current?.postponementCount || 0) + 1;
 
@@ -499,6 +527,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         undoCompleteTask,
         isTaskModalOpen,
         taskToEdit,
+        taskDefaultValues,
         openTaskModal,
         closeTaskModal,
         focusTask,

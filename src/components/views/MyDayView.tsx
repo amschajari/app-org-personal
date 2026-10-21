@@ -13,7 +13,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { NextActionCard } from '../antiProcrastination/NextActionCard';
 import { TaskItem } from '../tasks/TaskItem';
-import { getGreeting, isTaskToday, isTaskOverdue, formatDate } from '../../utils/dateUtils';
+import { getGreeting, isTaskToday, isTaskOverdue, formatDate, toLocalISODate } from '../../utils/dateUtils';
 import { getPostponedTasks } from '../../utils/antiProcrastination';
 
 export const MyDayView: React.FC = () => {
@@ -50,7 +50,7 @@ export const MyDayView: React.FC = () => {
   const postponedList = getPostponedTasks(tasks);
 
   // Pagos próximos en los siguientes 7 días
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = toLocalISODate(new Date());
   const upcomingPayments = payments.filter((p) => p.status === 'pendiente');
 
   const handleQuickAdd = (e: React.FormEvent) => {
